@@ -45,4 +45,5 @@ WORKDIR /workspace
 COPY . .
 
 RUN CUDA_VERSION=$CUDA_VERSION bash ./install_env.sh 3dgrut WITH_GCC11 
+RUN CUDA_VERSION=$CUDA_VERSION bash ./install_env_pip.sh 
 RUN echo "conda activate 3dgrut" >> ~/.bashrc
