@@ -30,3 +30,4 @@ pygltflib
 # kaolin==0.17.0
 usd-core
 ppisp @ git+https://github.com/nv-tlabs/ppisp@v1.0.1
+kagglehub

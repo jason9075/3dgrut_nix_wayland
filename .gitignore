@@ -1,5 +1,6 @@
 **__pycache__
 .vscode
+.venv/
 .polyscope.ini
 
 external/
@@ -37,3 +38,5 @@ playground/assets/
 
 assets/nvidia-hq.gif
 assets/playground_glass.gif
+
+.direnv/
