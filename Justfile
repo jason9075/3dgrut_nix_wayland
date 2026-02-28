@@ -55,7 +55,7 @@ docker-build IMAGE=DOCKER_IMAGE:
 #   just docker-run 3dgrut
 #
 docker-run IMAGE=DOCKER_IMAGE:
-  docker run --rm -it --gpus=all --net=host --ipc=host -v "$PWD:/workspace" --runtime=nvidia -e DISPLAY {{IMAGE}}
+  docker run --rm -it --device nvidia.com/gpu=all --net=host --ipc=host -v "$PWD:/workspace" -e DISPLAY {{IMAGE}}
 
 # ---------- Sample data via KaggleHub ----------
 
