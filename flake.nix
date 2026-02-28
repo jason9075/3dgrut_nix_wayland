@@ -31,6 +31,9 @@
 
             # Common runtime deps seen in CI / rich logging
             glib
+
+            # X11 helper (useful for Docker GUI on Wayland/XWayland)
+            xhost
           ];
 
           shellHook = ''

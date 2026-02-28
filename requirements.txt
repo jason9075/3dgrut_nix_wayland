@@ -9,6 +9,7 @@ wandb
 polyscope>=2.3.0
 addict
 rich
+viser
 slangtorch==1.3.4
 # NeRF Dataset requirements
 piexif

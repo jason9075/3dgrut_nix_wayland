@@ -45,17 +45,31 @@ DOCKER_IMAGE := "3dgrut"
 #   cd 3dgrut
 #   just docker-build
 #
-docker-build IMAGE=DOCKER_IMAGE:
-  docker build . -t {{IMAGE}}
+docker-build IMAGE=DOCKER_IMAGE CUDA_VERSION="11.8.0":
+  docker build . -t {{IMAGE}} --build-arg CUDA_VERSION={{CUDA_VERSION}}
 
-# Run container with GPU + host networking.
-# NOTE: For GUI/X11 you may also need: xhost +local:root
-# Example:
-#   just docker-run
-#   just docker-run 3dgrut
+# If you want X11 windows (Polyscope GUI) on Wayland, you generally need XWayland.
+# Host-side setup (once per session):
+#   xhost +SI:localuser:root
 #
-docker-run IMAGE=DOCKER_IMAGE:
-  docker run --rm -it --device nvidia.com/gpu=all --net=host --ipc=host -v "$PWD:/workspace" -e DISPLAY {{IMAGE}}
+# IMPORTANT: Do NOT mount the full repo into /workspace.
+# The image contains submodules and build-time deps; mounting the repo often hides them.
+# Instead, mount only mutable dirs (data/runs/outputs).
+#
+docker-run IMAGE=DOCKER_IMAGE DATA_DIR="data" RUNS_DIR="runs" OUTPUTS_DIR="outputs":
+  mkdir -p "{{DATA_DIR}}" "{{RUNS_DIR}}" "{{OUTPUTS_DIR}}"
+  docker run --rm -it \
+    --device nvidia.com/gpu=all \
+    --net=host --ipc=host \
+    -e DISPLAY="${DISPLAY:-}" \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -e WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-}" \
+    -e XDG_RUNTIME_DIR="/run/user/${UID}" \
+    -v "/run/user/${UID}:/run/user/${UID}" \
+    -v "$PWD/{{DATA_DIR}}:/workspace/{{DATA_DIR}}" \
+    -v "$PWD/{{RUNS_DIR}}:/workspace/{{RUNS_DIR}}" \
+    -v "$PWD/{{OUTPUTS_DIR}}:/workspace/{{OUTPUTS_DIR}}" \
+    {{IMAGE}}
 
 # ---------- Sample data via KaggleHub ----------
 
