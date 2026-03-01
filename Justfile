@@ -54,6 +54,12 @@ docker-build-no-cache IMAGE=DOCKER_IMAGE CUDA_VERSION="11.8.0":
 docker-smoke IMAGE=DOCKER_IMAGE:
   docker run --rm -it {{IMAGE}} bash -lc "conda run -n 3dgrut python -c 'import rich, hydra, omegaconf; print(\"deps ok\")' && conda run -n 3dgrut python train.py --help"
 
+# Stop running containers created from this image.
+# Useful if you started `just docker-run` in another terminal.
+docker-stop IMAGE=DOCKER_IMAGE:
+  ids=$(docker ps -q --filter "ancestor={{IMAGE}}")
+  if [ -n "$ids" ]; then docker stop $ids; else echo "No running containers for {{IMAGE}}"; fi
+
 # If you want X11 windows (Polyscope GUI) on Wayland, you generally need XWayland.
 # Host-side setup (once per session):
 #   xhost +SI:localuser:root
