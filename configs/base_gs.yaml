@@ -47,7 +47,7 @@ import_ply:
   init_global_step: 0
   
 export_usdz:
-  enabled: false
+  enabled: true
   path: ""
   apply_normalizing_transform: true
 

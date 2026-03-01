@@ -1,7 +1,10 @@
 FROM ubuntu:24.04
 
 ARG CUDA_VERSION=11.8.0
+ARG PYTHON_VERSION=3.11
+
 ENV CUDA_VERSION=${CUDA_VERSION}
+ENV PYTHON_VERSION=${PYTHON_VERSION}
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated ca-certificates \
@@ -44,6 +47,15 @@ ENV FORCE_CUDA=1
 WORKDIR /workspace
 COPY . .
 
-RUN CUDA_VERSION=$CUDA_VERSION bash ./install_env.sh 3dgrut WITH_GCC11 
-RUN CUDA_VERSION=$CUDA_VERSION bash ./install_env_pip.sh 
+RUN CUDA_VERSION=$CUDA_VERSION bash ./install_env.sh 3dgrut WITH_GCC11
+
+# Ensure Python deps are installed inside the conda env.
+# (In some setups, calling bare `pip` during env creation can install into the wrong interpreter.)
+RUN conda run -n 3dgrut python -m pip install --no-build-isolation -r requirements.txt
+RUN conda run -n 3dgrut python -m pip install --no-build-isolation -e .
+
+# Build-time smoke checks: fail early if deps are missing.
+RUN conda run -n 3dgrut python -c "import rich, hydra, omegaconf; print('deps ok')"
+RUN conda run -n 3dgrut python train.py --help
+
 RUN echo "conda activate 3dgrut" >> ~/.bashrc

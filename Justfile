@@ -46,7 +46,13 @@ DOCKER_IMAGE := "3dgrut"
 #   just docker-build
 #
 docker-build IMAGE=DOCKER_IMAGE CUDA_VERSION="11.8.0":
-  docker build . -t {{IMAGE}} --build-arg CUDA_VERSION={{CUDA_VERSION}}
+  docker build . -t {{IMAGE}} --build-arg CUDA_VERSION={{CUDA_VERSION}} --progress=plain
+
+docker-build-no-cache IMAGE=DOCKER_IMAGE CUDA_VERSION="11.8.0":
+  docker build --no-cache . -t {{IMAGE}} --build-arg CUDA_VERSION={{CUDA_VERSION}} --progress=plain
+
+docker-smoke IMAGE=DOCKER_IMAGE:
+  docker run --rm -it {{IMAGE}} bash -lc "conda run -n 3dgrut python -c 'import rich, hydra, omegaconf; print(\"deps ok\")' && conda run -n 3dgrut python train.py --help"
 
 # If you want X11 windows (Polyscope GUI) on Wayland, you generally need XWayland.
 # Host-side setup (once per session):

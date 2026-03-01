@@ -149,6 +149,9 @@ conda run -n 3dgrut python train.py \
   out_dir=runs experiment_name=lego_3dgut \
   with_gui=True
 ```
+```bash
+python train.py   --config-name apps/nerf_synthetic_3dgut.yaml   path=data/kaggle/nerf/nerf_synthetic/lego/   out_dir=runs experiment_name=lego_3dgut   with_viser_gui=True export_usdz.enabled=true
+```
 
 Note: the window may start black; adjust the camera/view.
 
