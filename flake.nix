@@ -15,6 +15,7 @@
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             just
+            colmap
 
             # Python + formatting tools
             python311
