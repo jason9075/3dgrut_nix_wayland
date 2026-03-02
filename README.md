@@ -75,10 +75,10 @@ Notes:
 - `docker-build` vendors the repo (including submodules) into the image.
 - The image build runs `./install_env.sh` to create the conda env inside the container.
 
-### 4) Run the container (default: do not mount the repo)
+### 4) Start a long-running container
 
 ```bash
-just docker-run
+just docker-up
 ```
 
 This:
@@ -87,13 +87,35 @@ This:
 - Does **not** mount the full repo into `/workspace` (prevents hiding submodules in the image)
 - Only mounts mutable dirs: `data/`, `runs/`, `outputs/`
 
-Inside the container, run training:
+### 5) Run training (from the host)
+
+```bash
+just docker-train data/nerf_synthetic/lego lego_3dgut
+```
+
+Note:
+- `just docker-train` 預設會帶 `export_usdz.enabled=true`
+- 要關掉：`just docker-train ... ... ... runs "export_usdz.enabled=false"`
+
+Equivalent container command:
 
 ```bash
 conda run -n 3dgrut python train.py \
   --config-name apps/nerf_synthetic_3dgut.yaml \
   path=data/nerf_synthetic/lego \
   out_dir=runs experiment_name=lego_3dgut
+```
+
+To use a different config (e.g. COLMAP):
+
+```bash
+just docker-train data/my_scene my_scene apps/colmap_3dgrt.yaml
+```
+
+To stop and remove the container:
+
+```bash
+just docker-down
 ```
 
 ---
@@ -104,7 +126,7 @@ This fork includes `kagglehub` in `requirements.txt`, and also provides a host-s
 The recommended flow is:
 
 1) Download datasets on the host into `data/`.
-2) Run the container with `just docker-run` (which mounts `data/` into the container).
+2) Start the container with `just docker-up` (which mounts `data/` into the container).
 
 Auth:
 - Set `KAGGLE_USERNAME` / `KAGGLE_KEY`, or
@@ -134,23 +156,22 @@ On the host (once per session):
 xhost +SI:localuser:root
 ```
 
-Run the container:
+Start the container:
 
 ```bash
-just docker-run
+just docker-up
 ```
 
-Inside the container:
+Run training with GUI (from host):
 
 ```bash
-conda run -n 3dgrut python train.py \
-  --config-name apps/nerf_synthetic_3dgut.yaml \
-  path=data/nerf_synthetic/lego \
-  out_dir=runs experiment_name=lego_3dgut \
-  with_gui=True
+just docker-train data/nerf_synthetic/lego lego_3dgut apps/nerf_synthetic_3dgut.yaml runs "with_gui=True"
 ```
+
+If you want to open a shell inside the running container:
+
 ```bash
-python train.py   --config-name apps/nerf_synthetic_3dgut.yaml   path=data/kaggle/nerf/nerf_synthetic/lego/   out_dir=runs experiment_name=lego_3dgut   with_viser_gui=True export_usdz.enabled=true
+just docker-attach
 ```
 
 Note: the window may start black; adjust the camera/view.
@@ -159,17 +180,13 @@ Note: the window may start black; adjust the camera/view.
 
 This fork includes `viser` in `requirements.txt`.
 
-Inside the container:
+Run training with Viser GUI (from host):
 
 ```bash
-conda run -n 3dgrut python train.py \
-  --config-name apps/nerf_synthetic_3dgut.yaml \
-  path=data/nerf_synthetic/lego \
-  out_dir=runs experiment_name=lego_3dgut \
-  with_viser_gui=True
+just docker-train data/nerf_synthetic/lego lego_3dgut apps/nerf_synthetic_3dgut.yaml runs "with_viser_gui=True"
 ```
 
-Since `docker-run` uses `--net=host`, open on the host:
+Since `docker-up` uses `--net=host`, open on the host:
 
 - http://localhost:8080
 
@@ -179,7 +196,11 @@ Since `docker-run` uses `--net=host`, open on the host:
 
 - List commands: `just`
 - Build image: `just docker-build`
-- Run shell: `just docker-run`
+- Start container: `just docker-up`
+- Train from host: `just docker-train`
+- Attach shell: `just docker-attach`
+- Stop container: `just docker-down`
+- One-shot shell (legacy): `just docker-run`
 - Format: `just fmt`
 - Format check: `just fmt-check`
 - Smoke: `just smoke`
@@ -204,7 +225,7 @@ docker info | rg -n "cdi: nvidia.com/gpu=all" || true
 ### 2) `tiny-cuda-nn/common.h: No such file or directory`
 
 Most commonly caused by mounting the host repo into `/workspace` and hiding the image’s submodules.
-This fork’s `just docker-run` does **not** mount the full repo.
+This fork’s `just docker-up` does **not** mount the full repo.
 
 If you insist on a full repo bind mount for development, ensure submodules exist on the host:
 
