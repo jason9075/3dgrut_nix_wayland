@@ -10,3 +10,13 @@ defaults:
 
 # overwrite of default parameters
 val_frequency: 999999 # never validate
+
+# COLMAP scenes typically converge a bit earlier; keep runtime shorter by default.
+n_iterations: 25000
+
+checkpoint:
+  iterations: ${int_list:[ 7000, 25000 ]}
+
+scheduler:
+  positions:
+    max_steps: 25000

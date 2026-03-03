@@ -93,7 +93,7 @@ docker-up IMAGE=DOCKER_IMAGE CONTAINER=DOCKER_CONTAINER DATA_DIR="data" RUNS_DIR
 #   just docker-train data/nerf_synthetic/lego lego_3dgut
 #   just docker-train data/my_scene my_scene apps/colmap_3dgrt.yaml
 #   just docker-train data/my_scene my_scene apps/colmap_3dgrt.yaml runs "with_viser_gui=True"
-docker-train DATA_PATH EXP CONFIG="apps/nerf_synthetic_3dgut.yaml" OUT_DIR="runs" EXTRA="export_usdz.enabled=true" CONTAINER=DOCKER_CONTAINER:
+docker-train DATA_PATH EXP CONFIG="apps/colmap_3dgut.yaml" OUT_DIR="runs" EXTRA="export_usdz.enabled=true" CONTAINER=DOCKER_CONTAINER:
   docker exec -it -w /workspace "{{CONTAINER}}" bash -lc \
     "conda run -n 3dgrut python train.py --config-name {{CONFIG}} path={{DATA_PATH}} out_dir={{OUT_DIR}} experiment_name={{EXP}} {{EXTRA}}"
 

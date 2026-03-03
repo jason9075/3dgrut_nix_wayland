@@ -90,7 +90,14 @@ This:
 ### 5) Run training (from the host)
 
 ```bash
-just docker-train data/nerf_synthetic/lego lego_3dgut
+# Default config is COLMAP + 3DGUT (apps/colmap_3dgut.yaml)
+just docker-train data/my_scene my_scene
+```
+
+For NeRF synthetic (explicitly set config):
+
+```bash
+just docker-train data/nerf_synthetic/lego lego_3dgut apps/nerf_synthetic_3dgut.yaml
 ```
 
 Note:
@@ -106,10 +113,14 @@ conda run -n 3dgrut python train.py \
   out_dir=runs experiment_name=lego_3dgut
 ```
 
-To use a different config (e.g. COLMAP):
+To use a different config:
 
 ```bash
+# 3DGRT renderer on COLMAP
 just docker-train data/my_scene my_scene apps/colmap_3dgrt.yaml
+
+# NeRF synthetic 3DGUT
+just docker-train data/nerf_synthetic/lego lego_3dgut apps/nerf_synthetic_3dgut.yaml
 ```
 
 To stop and remove the container:
