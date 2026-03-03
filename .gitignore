@@ -39,6 +39,9 @@ playground/assets/
 assets/nvidia-hq.gif
 assets/playground_glass.gif
 assets/scene/
-assets/scene.mp4
+assets/*.mp4
+assets/*.MP4
+assets/*.zip
+assets/desk2/
 
 .direnv/

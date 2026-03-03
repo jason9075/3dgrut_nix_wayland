@@ -92,6 +92,23 @@ if ! command -v colmap >/dev/null 2>&1; then
   exit 1
 fi
 
+abspath() {
+  local p="$1"
+  if command -v realpath >/dev/null 2>&1; then
+    realpath "$p"
+  elif command -v readlink >/dev/null 2>&1; then
+    readlink -f "$p"
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$p"
+  else
+    echo "$p"
+  fi
+}
+
+# Normalize paths to avoid broken relative symlinks under .colmap_work/.
+input_dir="$(abspath "$input_dir")"
+out_base="$(abspath "$out_base")"
+
 if [[ ! -d "$input_dir" ]]; then
   echo "ERROR: input_dir not found: $input_dir" >&2
   exit 1
@@ -132,6 +149,7 @@ fi
 mkdir -p "$work_dir"
 
 # Use a symlink so COLMAP sees a normal image directory.
+# NOTE: input_dir is normalized to an absolute path above, to avoid broken relative links.
 ln -sfn "$input_dir" "$work_dir/images"
 
 warn() {
