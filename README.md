@@ -59,6 +59,16 @@ If you want `just`, `xhost`, and formatting tools available:
 nix develop path:.
 ```
 
+If you need CUDA-enabled COLMAP (uses unfree CUDA packages; CUDA toolkit pinned to 12.6):
+
+```bash
+nix develop path:.#cuda
+```
+
+Notes:
+- The default shell intentionally avoids CUDA so `direnv`/flake evaluation works without unfree.
+- The `.#cuda` shell enables `allowUnfree` only for that shell.
+
 ### 3) Build the Docker image
 
 ```bash
