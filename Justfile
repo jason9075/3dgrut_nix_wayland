@@ -101,6 +101,18 @@ docker-train DATA_PATH EXP CONFIG="apps/colmap_3dgut.yaml" OUT_DIR="runs" EXTRA=
 docker-attach CONTAINER=DOCKER_CONTAINER:
   docker exec -it -w /workspace "{{CONTAINER}}" bash
 
+# Start TensorBoard inside the running container.
+# Since `docker-up` uses `--net=host`, open on the host:
+# - http://localhost:6006
+#
+# Examples:
+#   just docker-tensorboard
+#   just docker-tensorboard runs/ PORT=7007
+#   just docker-tensorboard runs/my_exp PORT=6006
+docker-tensorboard LOGDIR="runs" PORT="6006" CONTAINER=DOCKER_CONTAINER:
+  docker exec -it -w /workspace "{{CONTAINER}}" bash -lc \
+    "conda run -n 3dgrut tensorboard --logdir {{LOGDIR}} --host 0.0.0.0 --port {{PORT}}"
+
 # Stop and remove the named container.
 docker-down CONTAINER=DOCKER_CONTAINER:
   if docker inspect "{{CONTAINER}}" >/dev/null 2>&1; then docker rm -f "{{CONTAINER}}"; else echo "No such container: {{CONTAINER}}"; fi
