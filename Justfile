@@ -74,6 +74,7 @@ docker-up IMAGE=DOCKER_IMAGE CONTAINER=DOCKER_CONTAINER DATA_DIR="data" RUNS_DIR
   mkdir -p "{{DATA_DIR}}" "{{RUNS_DIR}}" "{{OUTPUTS_DIR}}"
   if docker inspect "{{CONTAINER}}" >/dev/null 2>&1; then if [ "{{FORCE}}" = "1" ]; then docker rm -f "{{CONTAINER}}"; else echo "Container already exists: {{CONTAINER}}" >&2; echo "Use: just docker-attach (or just docker-down, or just docker-up FORCE=1)" >&2; exit 1; fi; fi
   docker run -d \
+    --rm \
     --name "{{CONTAINER}}" \
     --device nvidia.com/gpu=all \
     --net=host --ipc=host \
@@ -93,9 +94,48 @@ docker-up IMAGE=DOCKER_IMAGE CONTAINER=DOCKER_CONTAINER DATA_DIR="data" RUNS_DIR
 #   just docker-train data/nerf_synthetic/lego lego_3dgut
 #   just docker-train data/my_scene my_scene apps/colmap_3dgrt.yaml
 #   just docker-train data/my_scene my_scene apps/colmap_3dgrt.yaml runs "with_viser_gui=True"
-docker-train DATA_PATH EXP CONFIG="apps/colmap_3dgut.yaml" OUT_DIR="runs" EXTRA="export_usdz.enabled=true" CONTAINER=DOCKER_CONTAINER:
+docker-train DATA_PATH EXP CONFIG="apps/colmap_3dgut.yaml" OUT_DIR="runs" EXTRA="export_usdz.enabled=true export_ply.enabled=true test_last=false" CONTAINER=DOCKER_CONTAINER:
   docker exec -it -w /workspace "{{CONTAINER}}" bash -lc \
     "conda run -n 3dgrut python train.py --config-name {{CONFIG}} path={{DATA_PATH}} out_dir={{OUT_DIR}} experiment_name={{EXP}} {{EXTRA}}"
+
+# Export a Gaussian PLY (e.g. cleaned by CloudCompare) to USDZ.
+# Notes:
+# - INPUT_PLY/OUTPUT_USDZ must live under data/, runs/, or outputs/ (the only docker mounts).
+# - OUTPUT_USDZ defaults to INPUT_PLY with .usdz extension.
+# Examples:
+#   just docker-export-usdz runs/desk3/desk3-0303_080338/export_last_cc.ply
+#   just docker-export-usdz /home/jason9075/projects/3dgrut/runs/desk3/desk3-0303_080338/export_last_cc.ply
+#   just docker-export-usdz runs/desk3/desk3-0303_080338/export_last_cc.ply outputs/desk3/desk3.usdz
+docker-export-usdz INPUT_PLY OUTPUT_USDZ="" CONTAINER=DOCKER_CONTAINER:
+  input_ply="{{INPUT_PLY}}"; \
+  output_usdz="{{OUTPUT_USDZ}}"; \
+  if [[ "$input_ply" = /* ]]; then \
+    if [[ "$input_ply" == "$PWD/"* ]]; then input_rel="${input_ply#"$PWD/"}"; else echo "INPUT_PLY must be inside: $PWD" >&2; exit 2; fi; \
+  else \
+    input_rel="$input_ply"; \
+  fi; \
+  if [[ "$input_rel" != data/* && "$input_rel" != runs/* && "$input_rel" != outputs/* ]]; then \
+    echo "INPUT_PLY must be under data/, runs/, or outputs/: $input_rel" >&2; exit 2; \
+  fi; \
+  input_in_container="/workspace/$input_rel"; \
+  docker cp "$PWD/threedgrut/export/scripts/ply_to_usd.py" "{{CONTAINER}}":/workspace/threedgrut/export/scripts/ply_to_usd.py; \
+  if [[ -n "$output_usdz" ]]; then \
+    if [[ "$output_usdz" = /* ]]; then \
+      if [[ "$output_usdz" == "$PWD/"* ]]; then output_rel="${output_usdz#"$PWD/"}"; else echo "OUTPUT_USDZ must be inside: $PWD" >&2; exit 2; fi; \
+    else \
+      output_rel="$output_usdz"; \
+    fi; \
+    if [[ "$output_rel" != data/* && "$output_rel" != runs/* && "$output_rel" != outputs/* ]]; then \
+      echo "OUTPUT_USDZ must be under data/, runs/, or outputs/: $output_rel" >&2; exit 2; \
+    fi; \
+    output_in_container="/workspace/$output_rel"; \
+    docker exec -i -w /workspace/threedgrut/export/scripts "{{CONTAINER}}" bash -lc \
+      "conda run -n 3dgrut python ply_to_usd.py \"$input_in_container\" --output_file \"$output_in_container\""; \
+  else \
+    docker exec -i -w /workspace/threedgrut/export/scripts "{{CONTAINER}}" bash -lc \
+      "conda run -n 3dgrut python ply_to_usd.py \"$input_in_container\""; \
+  fi
+
 
 # Attach an interactive shell to the running container.
 docker-attach CONTAINER=DOCKER_CONTAINER:
